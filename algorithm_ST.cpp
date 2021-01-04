@@ -34,13 +34,11 @@ private:
     int Board_capacity[5][6];
     char Board_color[5][6];
     bool Board_exploded[5][6];
-    friend class Board;
+    //friend class futureBoard;
 
 public:
     Board_process()
     {
-
-        ////// Initialize the borad with correct capacity //////
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 6; j++)
             {
@@ -64,22 +62,22 @@ public:
         for (int i = 0; i < 5; i++)
             for (int j = 0; j < 6; j++)
             {
-                this->Board_num[i][j] = object.get_orbs_num(i, j);
-                this->Board_color[i][j] = object.get_cell_color(i, j);
+                this->Board_num[i][j] = object.get_num(i, j);
+                this->Board_color[i][j] = object.get_color(i, j);
             }
     }
-    void place_orb(int i, int j, char color)
+    void placeOrb(int i, int j, char color)
     {
         Board_num[i][j]++;
         Board_color[i][j] = color;
-        if (this->cell_is_full(i, j))
+        if (this->isFull(i, j))
         {
-            this->cell_explode(i, j);
-            this->cell_reaction_marker();
-            this->cell_chain_reaction(color);
+            this->explode(i, j);
+            this->chainReactionMarker();
+            this->chainReaction(color);
         }
     }
-    bool cell_is_full(int i, int j)
+    bool isFull(int i, int j)
     {
         if (Board_num[i][j] >= Board_capacity[i][j])
         {
@@ -89,77 +87,73 @@ public:
         else
             return false;
     }
-    void add_orb(int i, int j, char color)
+    void addOrb(int i, int j, char color)
     {
         Board_num[i][j]++;
         Board_color[i][j] = color;
     }
-
-    void cell_reset(int i, int j)
+    void reset(int i, int j)
     {
         Board_num[i][j] = 0;
+        Board_exploded[i][j] = false;
         Board_color[i][j] = 'w';
     }
-
-    void cell_explode(int i, int j)
+    void explode(int i, int j)
     {
 
         int orb_num;
         char color = Board_color[i][j];
 
-        cell_reset(i, j);
+        reset(i, j);
 
         if (i + 1 < 5)
         {
-            add_orb(i + 1, j, color);
+            addOrb(i + 1, j, color);
         }
 
         if (j + 1 < 6)
         {
-            add_orb(i, j + 1, color);
+            addOrb(i, j + 1, color);
         }
 
         if (i - 1 >= 0)
         {
-            add_orb(i - 1, j, color);
+            addOrb(i - 1, j, color);
         }
 
         if (j - 1 >= 0)
         {
-            add_orb(i, j - 1, color);
+            addOrb(i, j - 1, color);
         }
         if (i + 1 < 5 && j - 1 >= 0)
         {
-            add_orb(i + 1, j - 1, color);
+            addOrb(i + 1, j - 1, color);
         }
         if (i - 1 >= 0 && j - 1 >= 0)
         {
-            add_orb(i - 1, j - 1, color);
+            addOrb(i - 1, j - 1, color);
         }
         if (i + 1 < 5 && j + 1 < 6)
         {
-            add_orb(i + 1, j + 1, color);
+            addOrb(i + 1, j + 1, color);
         }
         if (i - 1 >= 0 && j + 1 < 6)
         {
-            add_orb(i - 1, j + 1, color);
+            addOrb(i - 1, j + 1, color);
         }
     }
-
-    void cell_reaction_marker()
+    void chainReactionMarker()
     {
-
         // Mark the next cell whose number of orbs is equal to the capacity
         for (int i = 0; i < ROW; i++)
         {
             for (int j = 0; j < COL; j++)
             {
-                this->cell_is_full(i, j);
+                this->isFull(i, j);
             }
         }
     }
-
-    void cell_chain_reaction(char color)
+    void chainReaction(char color)
     {
 
         bool chain_reac = true;
@@ -173,50 +167,45 @@ public:
                 {
                     if (Board_exploded[i][j])
                     {
-                        this->cell_explode(i, j);
+                        this->explode(i, j);
                         chain_reac = true;
                     }
                 }
             }
-            if (win_the_game(color))
+            if (isWin(color))
                 return;
-            this->cell_reaction_marker();
+            this->chainReactionMarker();
         }
     }
-
-    bool win_the_game(char player_color)
+    bool isWin(char player_color)
     {
-        bool win = true;
-
+        int player = 0, opponent = 0, empty = 0;
         for (int i = 0; i < 5; i++)
         {
             for (int j = 0; j < 6; j++)
             {
-                if (Board_color[i][j] == player_color || Board_color[i][j] == 'w')
-                    continue;
+                if (Board_color[i][j] == player_color)
+                    player++;
+                else if (Board_color[i][j] == 'w')
+                    empty++;
                 else
-                {
-                    win = false;
-                    break;
-                }
+                    opponent++;
             }
-            if (!win)
-                break;
         }
-        return win;
+        if (player + opponent >= 2 && opponent == 0)
+            return true;
+        else
+            return false;
     }
-
-    int get_orbs_num(int i, int j)
+    int get_num(int i, int j)
     {
         return Board_num[i][j];
     }
-
-    int get_capacity(int i, int j)
+    int getCapacity(int i, int j)
     {
         return Board_capacity[i][j];
     }
-
-    char get_cell_color(int i, int j)
+    char get_color(int i, int j)
     {
         return Board_color[i][j];
     }
@@ -224,200 +213,22 @@ public:
     {
         Board_num[i][j] = num;
     }
-
     void set_cell_color(char color, int i, int j)
     {
         Board_color[i][j] = color;
     }
-};
-
-class futureBoard
-{
-private:
-    Board_process originBoard;
-    char color;
-    char opponentColor;
-
-public:
-    futureBoard(Board board, Player player)
+    void print_current_board()
     {
-        color = player.get_color();
-        if (color == 'r')
-            opponentColor = 'b';
-        else if (color == 'b')
-            opponentColor = 'r';
-        for (int i = 0; i < 5; i++)
-            for (int j = 0; j < 6; j++)
-            {
-                originBoard.set_orbs_num(board.get_orbs_num(i, j), i, j);
-                originBoard.set_cell_color(board.get_cell_color(i, j), i, j);
-            }
-    };
 
-    void findBestMove(Board board, int *put)
-    {
-        int BestMove = -99999999999, BestMoveRow, BestMoveCol;
-        int thisMove;
-
-        Board_process currentBoard;
-
-        currentBoard.Board_copy(originBoard);
-
-        //this->print_current_board();
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                if (board.get_cell_color(i, j) != opponentColor)
-                {
-                    currentBoard.place_orb(i, j, color);
-
-                    thisMove = this->minmax(currentBoard, 1, opponentColor);
-                    currentBoard.Board_copy(originBoard);
-                    //cout << thisMove << endl;
-
-                    if (BestMove < thisMove) //max
-                    {
-                        BestMove = thisMove;
-                        BestMoveRow = i;
-                        BestMoveCol = j;
-                    }
-                }
-            }
-        }
-
-        //fileout2 << "after all : \n";                                            // test only
-        //this->print_current_board();                                             // test only
-        //fileout2 << "The End" << endl                                            //test only
-        //         << BestMove << " " << BestMoveRow << " " << BestMoveCol << endl //test only
-        //         << endl;                                                        //test only
-        put[0] = BestMoveRow;
-        put[1] = BestMoveCol;
-    };
-
-    inline int minmax(Board_process nodeBoard, int depth, char playerColor)
-    {
-        int BestScore = -99999999999, Score;
-        Board_process currentBoard;
-
-        //  fileout2 << "before this->game_processing() : \n"; // test only
-        // this->print_current_board();                       // test only
-        currentBoard.Board_copy(nodeBoard);
-
-        if (currentBoard.win_the_game(color))
-            return 99999999999;
-        else if (currentBoard.win_the_game(opponentColor))
-            return -99999999999;
-        if (depth == 3)
-            return calculateScore(currentBoard);
-
-        if (playerColor == color) // my turn
-        {
-            for (int i = 0; i < 5; i++)
-                for (int j = 0; j < 6; j++)
-                {
-                    if (currentBoard.get_cell_color(i, j) != opponentColor)
-                    {
-                        currentBoard.place_orb(i, j, color);
-                        Score = this->minmax(currentBoard, depth + 1, opponentColor);
-                        currentBoard.Board_copy(nodeBoard);
-                        if (BestScore < Score) //max
-                            BestScore = Score;
-                    }
-                }
-            //this->recover(Board_record, Board_color_record);
-            //fileout2 << "at the depth " << depth << ", after this->recover() : " << endl // test only
-            //         << "BestScore = " << BestScore << endl;                             // test only
-            //this->print_current_board();                                                 // test only                                                                           // test only
-            return BestScore;
-        }
-        else // opponent turn
-        {
-            for (int i = 0; i < 5; i++)
-                for (int j = 0; j < 6; j++)
-                {
-                    if (currentBoard.get_cell_color(i, j) != color)
-                    {
-                        currentBoard.place_orb(i, j, opponentColor);
-                        Score = this->minmax(currentBoard, depth + 1, color);
-                        currentBoard.Board_copy(nodeBoard);
-                        if (BestScore > Score) // min
-                            BestScore = Score;
-                    }
-                }
-            //this->recover(Board_record, Board_color_record);
-            //fileout2 << "at the depth " << depth << ", after this->recover() : " << endl // test only
-            //         << "BestScore = " << BestScore << endl;                             // test only
-            //this->print_current_board();                                                 // test only
-            return BestScore;
-        }
-    };
-    inline int calculateScore(Board_process currentBoard)
-    {
-        int score = 0;
-        for (int i = 0; i < 5; i++)
-        {
-            for (int j = 0; j < 6; j++)
-            {
-                if (currentBoard.get_cell_color(i, j) != opponentColor)
-                    score += calculateOrbScore(currentBoard, i, j, color);
-                else
-                    score -= calculateOrbScore(currentBoard, i, j, opponentColor);
-            }
-        }
-        return score;
-    }
-    inline int calculateOrbScore(Board_process currentBoard, int row, int col, char playerColor)
-    {
-        int score = 0;
-        int pos = row * 6 + col;
-        int player_limit_count = 0, opponent_limit_count = 0;
-
-        if (currentBoard.get_orbs_num(row, col) >= 1)
-            score += 3510 * (currentBoard.get_orbs_num(row, col) + 10) / (currentBoard.get_capacity(row, col) + 10);
-        for (int diff = -7; diff < 8; diff++)
-        {
-            bool out_of_range = false;
-
-            if (diff == -4)
-                diff = -1;
-            else if (diff == 0)
-                diff = 1;
-            else if (diff == 2)
-                diff = 5;
-
-            if (row == 0 && diff >= -7 && diff <= -5)
-                out_of_range = true;
-            else if (row == 4 && diff >= 5 && diff <= 7)
-                out_of_range = true;
-            if (col == 0 && (diff == -7 || diff == -1 || diff == 5))
-                out_of_range = true;
-            else if (col == 5 && (diff == -5 || diff == 1 || diff == 7))
-                out_of_range = true;
-
-            if (!out_of_range)
-            {
-                int LookRow = (pos + diff) / 6;
-                int LookCol = (pos + diff) % 6;
-                if (currentBoard.get_cell_color(row, col) == playerColor || currentBoard.get_cell_color(row, col) == 'w') //opponent
-                    score--;
-            }
-        }
-
-        return score;
-    }
-    /*
-    inline void print_current_board()
-    {
         int orb_num;
         char symbol;
-        fileout2 << "===========================================================================================\n";
+        fileout2 << "=============================================================" << endl;
         for (int i = 0; i < ROW; i++)
         {
             for (int j = 0; j < COL; j++)
             {
 
-                symbol = Board_color[i][j];
+                symbol = get_color(i, j);
                 switch (symbol)
                 {
                 case 'r':
@@ -430,7 +241,7 @@ public:
                     break;
                 }
 
-                orb_num = Board_copy[i][j];
+                orb_num = get_num(i, j);
                 switch (orb_num)
                 {
                 case 0:
@@ -461,15 +272,208 @@ public:
             }
             fileout2 << endl;
         }
-        fileout2 << "===========================================================================================\n";
-        fileout2 << endl;
-    }*/
+        fileout2 << "=============================================================" << endl
+                 << endl;
+    }
 };
+
+//void findBestMove(Board_process originBoard, int *put, char color, char opponentColor);
+int minmax(Board_process nodeBoard, int depth, bool isMax, char color, char opponentColor);
+int calculateScore(Board_process currentBoard, char color, char opponentColor);
+int calculateOrbScore(Board_process currentBoard, int row, int col, char playerColor, bool isEmpty);
+bool willexplosive(Board_process currentBoard, char Color, int row, int col);
 
 void algorithm_A(Board board, Player player, int index[])
 {
-    static int round = -1;
-    round += 2;
-    futureBoard currentBoard(board, player);
-    currentBoard.findBestMove(board, index);
+    //static int round = -1;
+    //round += 2;
+
+    //fileout2 << "hello : \n";
+
+    char color = player.get_color();
+    char opponentColor;
+    Board_process originBoard;
+
+    if (color == 'r')
+        opponentColor = 'b';
+    else if (color == 'b')
+        opponentColor = 'r';
+    for (int i = 0; i < 5; i++)
+        for (int j = 0; j < 6; j++)
+        {
+            originBoard.set_orbs_num(board.get_orbs_num(i, j), i, j);
+            originBoard.set_cell_color(board.get_cell_color(i, j), i, j);
+        }
+    //originBoard.print_current_board();
+    //findBestMove(originBoard, index, color, opponentColor);
+
+    int BestMove = -999999999, BestMoveRow, BestMoveCol;
+    int thisMove;
+
+    Board_process currentBoard;
+
+    currentBoard.Board_copy(originBoard);
+
+    //this->print_current_board();
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 6; j++)
+        {
+            if (originBoard.get_color(i, j) != opponentColor)
+            {
+                currentBoard.placeOrb(i, j, color);
+                //currentBoard.print_current_board(); //test only
+                thisMove = minmax(currentBoard, 1, false, color, opponentColor);
+                //fileout2 << "thismove = " << thisMove << endl;
+                currentBoard.Board_copy(originBoard);
+                //currentBoard.print_current_board(); //test only
+                //cout << thisMove << endl;
+
+                if (BestMove < thisMove) //max
+                {
+                    BestMove = thisMove;
+                    BestMoveRow = i;
+                    BestMoveCol = j;
+                }
+            }
+        }
+    }
+
+    fileout2 << "after all : \n"; // test only
+    //this->print_current_board();                                             // test only
+    fileout2 << "The End" << endl                                            //test only
+             << BestMove << " " << BestMoveRow << " " << BestMoveCol << endl //test only
+             << endl;                                                        //test only
+    index[0] = BestMoveRow;
+    index[1] = BestMoveCol;
+}
+
+int minmax(Board_process nodeBoard, int depth, bool isMax, char color, char opponentColor)
+{
+    Board_process currentBoard;
+
+    //  fileout2 << "before this->game_processing() : \n"; // test only
+    // this->print_current_board();                       // test only
+    currentBoard.Board_copy(nodeBoard);
+
+    if (currentBoard.isWin(color))
+        return 99999999;
+    else if (currentBoard.isWin(opponentColor))
+        return -99999999;
+    if (depth == 3)
+        return calculateScore(currentBoard, color, opponentColor);
+
+    if (isMax) // my turn
+    {
+        int BestScore = -99999999, Score;
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 6; j++)
+            {
+                if (currentBoard.get_color(i, j) != opponentColor)
+                {
+                    currentBoard.placeOrb(i, j, color);
+                    //fileout2 << "after placeOrb :\n";
+                    //currentBoard.print_current_board();
+                    Score = minmax(currentBoard, depth + 1, false, color, opponentColor);
+                    //fileout2 << "Score = " << Score << endl;
+                    currentBoard.Board_copy(nodeBoard);
+                    //fileout2 << "after recover :\n";
+                    //currentBoard.print_current_board();
+                    if (BestScore < Score) //max
+                        BestScore = Score;
+                }
+            }
+        //this->recover(Board_record, Board_color_record);
+        //fileout2 << "at the depth " << depth << ", after this->recover() : " << endl // test only
+        //         << "BestScore = " << BestScore << endl;                             // test only
+        //this->print_current_board();                                                 // test only                                                                           // test only
+        return BestScore;
+    }
+    else // opponent turn
+    {
+        int BestScore = 99999999, Score;
+        for (int i = 0; i < 5; i++)
+            for (int j = 0; j < 6; j++)
+            {
+                if (currentBoard.get_color(i, j) != color)
+                {
+                    currentBoard.placeOrb(i, j, opponentColor);
+                    //fileout2 << "after placeOrb :\n";
+                    //currentBoard.print_current_board();
+                    Score = minmax(currentBoard, depth + 1, true, color, opponentColor);
+                    //fileout2 << "Score = " << Score << endl;
+                    currentBoard.Board_copy(nodeBoard);
+                    //fileout2 << "after recover :\n";
+                    //currentBoard.print_current_board();
+                    if (BestScore > Score) // min
+                        BestScore = Score;
+                }
+            }
+        //this->recover(Board_record, Board_color_record);
+        //fileout2 << "at the depth " << depth << ", after this->recover() : " << endl // test only
+        //         << "BestScore = " << BestScore << endl;                             // test only
+        //this->print_current_board();                                                 // test only
+        return BestScore;
+    }
+}
+int calculateScore(Board_process currentBoard, char color, char opponentColor)
+{
+    int score = 0;
+    for (int i = 0; i < 5; i++)
+    {
+        for (int j = 0; j < 6; j++)
+        { /*
+            if (currentBoard.get_color(i, j) == color)
+                score += 3510 * (currentBoard.get_num(i, j) + 10) / (currentBoard.getCapacity(i, j) + 10);
+            else if (currentBoard.get_color(i, j) == opponentColor)
+                score -= 3510 * (currentBoard.get_num(i, j) + 10) / (currentBoard.getCapacity(i, j) + 10);
+            */
+            if (currentBoard.get_color(i, j) == color)
+                score += calculateOrbScore(currentBoard, i, j, color, false);
+            else if (currentBoard.get_color(i, j) == 'w')
+                score += 0; //calculateOrbScore(currentBoard, i, j, color, true);
+            else
+                score -= calculateOrbScore(currentBoard, i, j, opponentColor, false);
+        }
+    }
+    return score;
+}
+int calculateOrbScore(Board_process currentBoard, int row, int col, char playerColor, bool isEmpty)
+{
+    int score = 0;
+    int pos = row * 6 + col;
+    int fraction = currentBoard.get_num(row, col);
+    int denominator = currentBoard.getCapacity(row, col);
+
+    for (int diff = -7; diff < 8; diff++)
+    {
+        bool out_of_range = false;
+
+        if (diff == -4)
+            diff = -1;
+        else if (diff == 0)
+            diff = 1;
+        else if (diff == 2)
+            diff = 5;
+
+        if (row == 0 && diff >= -7 && diff <= -5)
+            out_of_range = true;
+        else if (row == 4 && diff >= 5 && diff <= 7)
+            out_of_range = true;
+        if (col == 0 && (diff == -7 || diff == -1 || diff == 5))
+            out_of_range = true;
+        else if (col == 5 && (diff == -5 || diff == 1 || diff == 7))
+            out_of_range = true;
+
+        if (!out_of_range)
+        {
+            int LookRow = (pos + diff) / 6;
+            int LookCol = (pos + diff) % 6;
+            if (currentBoard.get_color(LookRow, LookCol) == playerColor)
+                score += 3510 * (currentBoard.get_num(LookRow, LookCol) + 10) / (currentBoard.getCapacity(LookRow, LookCol) + 10);
+        }
+    }
+    if (!isEmpty)
+        score += 3510 * (fraction + 10) / (denominator + 10);
+    return score;
 }
